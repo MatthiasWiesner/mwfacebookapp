@@ -119,7 +119,7 @@ if(isset($facebookConfig['appId'])){
         exit();
     }
 }
-// catch all what was printed (or included views)
+// catch everything that has been printed (or included views)
 $content = ob_get_contents();
 ob_end_clean();
 // finally, we show altogether
