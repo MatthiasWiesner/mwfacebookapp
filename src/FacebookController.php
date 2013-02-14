@@ -21,14 +21,14 @@ class FacebookController {
             'appId' => $creds['CONFIG_VARS']['APP_ID'],
             'secret' => $creds['CONFIG_VARS']['SECRET_KEY']
         );
+        $this->facebook = new \Facebook($this->facebookConfig);
     }
     
     public function loggedIn(){
-        $facebook = new \Facebook($this->facebookConfig);
-        $user = $facebook->getUser();
+        $user = $this->facebook->getUser();
         if ($user) {
             try {
-                $facebook->api('/me');
+                $this->facebook->api('/me');
                 return true;
             } catch (\FacebookApiException $e) {
                 // 
@@ -38,8 +38,7 @@ class FacebookController {
     }
     
     public function login(){
-        $facebook = new \Facebook($this->facebookConfig);
-        $loginUrl = $facebook->getLoginUrl(array(
+        $loginUrl = $this->facebook->getLoginUrl(array(
             'redirect_uri' => $this->facebookConfig['appUrl']
         ));
         $content = sprintf("<script type='text/javascript'>top.location.href = '%s';</script>", $loginUrl);

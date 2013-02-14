@@ -13,19 +13,17 @@ class CloudControlController {
     private $api;   
     private static $creds = array();
     
-    public function __construct() {
+    public function __construct($app) {
+        $this->app = $app;
         $this->api = new API();
-    }
-    
-    public function initApi($app){
-        $token = $app['session']->get('token');
+        $token = $this->app['session']->get('token');
         if ($token){
             $this->api->setToken($token);
         }
     }
     
-    public function login($app, $request){
-        $form = $app['form.factory']->createBuilder('form')
+    public function login($request){
+        $form = $this->app['form.factory']->createBuilder('form')
         ->add('email', 'text', array('label' => "Email"))
         ->add('password', 'password', array('label' => "Password"))
         ->getForm();
@@ -37,53 +35,53 @@ class CloudControlController {
                     $data['email'],
                     $data['password']
                 );
-                $app['session']->set('token', $this->api->getToken());
-                return $app->redirect('/');
+                $this->app['session']->set('token', $this->api->getToken());
+                return $this->app->redirect('/');
             }
         }
-        return $app['twig']->render('login.twig', array(
+        return $this->app['twig']->render('login.twig', array(
             'form' => $form->createView()));
     }
     
-    public function logout($app){
-        $app['session']->set('token', '');
+    public function logout(){
+        $this->app['session']->set('token', '');
         $this->api = new API();
-        return $app->redirect('/login');
+        return $this->app->redirect('/login');
     }
     
-    public function appList($app){
+    public function appList(){
         try {
             $applicationList = $this->api->application_getList();
-            return $app['twig']->render('applist.twig', array(
+            return $this->app['twig']->render('applist.twig', array(
                 'applicationList' => $applicationList));
         } catch (UnauthorizedError $e) {
-            return $app->redirect('/login');
+            return $this->app->redirect('/login');
         } catch (TokenRequiredError $e) {
-            return $app->redirect('/login');
+            return $this->app->redirect('/login');
         }
     }
     
-    public function appDetails($app, $applicationName){
+    public function appDetails($applicationName){
         try {
             $application = $this->api->application_getDetails($applicationName);
-            return $app['twig']->render('appDetails.twig', array(
+            return $this->app['twig']->render('appDetails.twig', array(
                 'application' => $application, 'applicationName' => $applicationName));
         } catch (UnauthorizedError $e) {
-            return $app->redirect('/login');
+            return $this->app->redirect('/login');
         } catch (TokenRequiredError $e) {
-            return $app->redirect('/login');
+            return $this->app->redirect('/login');
         }
     }
     
-    public function deploymentDetails($app, $applicationName, $deploymentName){
+    public function deploymentDetails($applicationName, $deploymentName){
         try {
             $deployment = $this->api->deployment_getDetails($applicationName, $deploymentName);
-            return $app['twig']->render('deploymentDetails.twig', array(
+            return $this->app['twig']->render('deploymentDetails.twig', array(
                 'deployment' => $deployment));
         } catch (UnauthorizedError $e) {
-            return $app->redirect('/login');
+            return $this->app->redirect('/login');
         } catch (TokenRequiredError $e) {
-            return $app->redirect('/login');
+            return $this->app->redirect('/login');
         }
     }
     

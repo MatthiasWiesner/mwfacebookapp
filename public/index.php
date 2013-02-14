@@ -17,7 +17,6 @@ $app->register(new Silex\Provider\TwigServiceProvider(), array(
     'twig.path' => __DIR__.'/../views',
 ));
 
-$cloudControlController = new CloudControlController();
 $creds = CloudControlController::getCredentials('MYSQLS');
 
 $app->register(new Silex\Provider\DoctrineServiceProvider(), array(
@@ -46,8 +45,6 @@ $app['session.storage.handler'] = $app->share(function () use ($app) {
     );
 });
 
-$cloudControlController->initApi($app);
-
 $app->before(function () {
     $facebookController = new FacebookController();
     if(!$facebookController->loggedIn()){
@@ -70,25 +67,27 @@ $app->error(function (\Exception $e, $code) use ($app) {
     ));
 });
 
+$cloudControlController = new CloudControlController($app);
+
 // facebook does initially a POST request on "/", all other request are use GET request method
-$app->match('/', function () use ($app, $cloudControlController) {
-    return $cloudControlController->appList($app);
+$app->match('/', function () use ($cloudControlController) {
+    return $cloudControlController->appList();
 });
 
-$app->get('/app/{applicationName}', function ($applicationName) use ($app, $cloudControlController) {
-    return $cloudControlController->appDetails($app, $applicationName);
+$app->get('/app/{applicationName}', function ($applicationName) use ($cloudControlController) {
+    return $cloudControlController->appDetails($applicationName);
 });
 
-$app->get('/deployment/{applicationName}/{deploymentName}', function ($applicationName, $deploymentName) use ($app, $cloudControlController) {
-    return $cloudControlController->deploymentDetails($app, $applicationName, $deploymentName);
+$app->get('/deployment/{applicationName}/{deploymentName}', function ($applicationName, $deploymentName) use ($cloudControlController) {
+    return $cloudControlController->deploymentDetails($applicationName, $deploymentName);
 });
 
-$app->match('/login', function (Request $request) use ($app, $cloudControlController) {
-    return $cloudControlController->login($app, $request);
+$app->match('/login', function (Request $request) use ($cloudControlController) {
+    return $cloudControlController->login($request);
 });
 
-$app->get('/logout', function (Request $request) use ($app, $cloudControlController) {
-    return $cloudControlController->logout($app);
+$app->get('/logout', function (Request $request) use ($cloudControlController) {
+    return $cloudControlController->logout();
 });
 
 $app->run();
